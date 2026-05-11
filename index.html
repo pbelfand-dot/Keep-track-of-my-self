@@ -6,7 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="My Dashboard">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050506">
+<link rel="manifest" href="manifest.json">
 <title>Personal Dashboard</title>
 <style>
 /* MONOCHROME GLASS */
@@ -403,6 +405,21 @@ header {
   .header-actions .btn:not(.btn-accent) { display: none; }
   .header-actions .btn-settings { display: flex; }
 }
+
+/* PWA INSTALL BANNER */
+#installBanner {
+  display: none; position: fixed; bottom: calc(72px + env(safe-area-inset-bottom)); left: 12px; right: 12px; z-index: 150;
+  background: rgba(20,20,22,0.97); border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  box-shadow: var(--glass-shadow-lg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  animation: msgIn 0.3s ease;
+}
+#installBanner.visible { display: flex; align-items: center; gap: 12px; }
+.install-icon { font-size: 28px; flex-shrink: 0; }
+.install-text { flex: 1; }
+.install-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.install-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+.install-actions { display: flex; gap: 6px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -787,6 +804,19 @@ header {
   <div class="card">
     <div class="card-header"><div class="card-title">History — <span id="exerciseHistoryLabel">Exercise</span></div></div>
     <div class="history-list" id="gymHistory"><div class="empty-state">No history.</div></div>
+  </div>
+</div>
+
+<!-- PWA INSTALL BANNER -->
+<div id="installBanner">
+  <div class="install-icon">✦</div>
+  <div class="install-text">
+    <div class="install-title">Add to Home Screen</div>
+    <div class="install-sub">Open Dashboard like a native app — one tap, always there.</div>
+  </div>
+  <div class="install-actions">
+    <button class="btn btn-accent btn-sm" id="installBtn">Install</button>
+    <button class="btn btn-sm" onclick="dismissInstall()">✕</button>
   </div>
 </div>
 
@@ -1438,6 +1468,45 @@ function endDay(){if(!confirm('End your day?'))return;saveReflection();syncToGis
 function handleSearch(q){if(!q.trim())return;}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSettings();});
+
+// PWA — Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// PWA — Install prompt (Android/Chrome)
+let _installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  if (!localStorage.getItem('pwa-dismissed')) {
+    document.getElementById('installBanner').classList.add('visible');
+  }
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  const { outcome } = await _installPrompt.userChoice;
+  if (outcome === 'accepted') dismissInstall();
+});
+window.addEventListener('appinstalled', () => dismissInstall());
+function dismissInstall() {
+  localStorage.setItem('pwa-dismissed', '1');
+  document.getElementById('installBanner').classList.remove('visible');
+}
+
+// iOS hint — show instructions if running in Safari (not standalone)
+(function() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  const dismissed = localStorage.getItem('pwa-ios-dismissed');
+  if (isIOS && !isStandalone && !dismissed && !_installPrompt) {
+    const banner = document.getElementById('installBanner');
+    banner.querySelector('.install-sub').textContent = 'Tap the Share button below, then "Add to Home Screen".';
+    banner.classList.add('visible');
+    document.getElementById('installBtn').style.display = 'none';
+  }
+})();
 </script>
 </body>
 </html>
