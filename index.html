@@ -505,7 +505,10 @@ header {
   <div class="card">
     <div class="card-header">
       <div class="card-title">Personal Brand</div>
-      <button class="btn btn-sm" onclick="openSettings()">Edit</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" id="refreshFollowersBtn" onclick="fetchLiveFollowers()" title="Refresh live counts">↻ Refresh</button>
+        <button class="btn btn-sm" onclick="openSettings()">Edit</button>
+      </div>
     </div>
     <div class="profile-row">
       <div class="profile-avatar" id="profileAvatar">—</div>
@@ -538,6 +541,7 @@ header {
         <div class="platform-delta" id="ytDelta">+0 this week</div>
       </div>
     </div>
+    <div id="followerRefreshStatus" style="font-size:11px;color:var(--text-quaternary);margin-top:8px;"></div>
   </div>
 
   <!-- Today's Reflection -->
@@ -902,12 +906,24 @@ header {
     <label class="settings-label">Tagline</label>
     <input class="settings-input" id="settingTagline" placeholder="Building the long game.">
 
-    <div class="settings-section">Social Followers</div>
+    <div class="settings-section">Social Handles</div>
     <div class="settings-row">
-      <div><label class="settings-label">TikTok</label><input class="settings-input" id="settingTT" type="number" placeholder="0"></div>
-      <div><label class="settings-label">Instagram</label><input class="settings-input" id="settingIG" type="number" placeholder="0"></div>
+      <div><label class="settings-label">TikTok handle</label><input class="settings-input" id="settingTTHandle" placeholder="@username"></div>
+      <div><label class="settings-label">Instagram handle</label><input class="settings-input" id="settingIGHandle" placeholder="@username"></div>
     </div>
-    <label class="settings-label">YouTube</label>
+    <label class="settings-label">YouTube handle</label>
+    <input class="settings-input" id="settingYTHandle" placeholder="@username">
+
+    <div class="settings-section">Live Follower Counts</div>
+    <div class="settings-sub" style="margin-top:-8px;margin-bottom:12px;">Add a free YouTube Data API v3 key to fetch real subscriber counts. TikTok &amp; Instagram refresh automatically without a key (may occasionally fail).</div>
+    <label class="settings-label">YouTube Data API v3 Key <span style="color:var(--text-quaternary);font-weight:400;">(free)</span></label>
+    <input class="settings-input mono" id="settingYtApiKey" placeholder="AIza...">
+    <div class="settings-sub" style="margin-top:-4px;margin-bottom:10px;">Get one free at console.cloud.google.com → Enable YouTube Data API v3 → Credentials → API key</div>
+    <div class="settings-row">
+      <div><label class="settings-label">TikTok (manual fallback)</label><input class="settings-input" id="settingTT" type="number" placeholder="0"></div>
+      <div><label class="settings-label">Instagram (manual fallback)</label><input class="settings-input" id="settingIG" type="number" placeholder="0"></div>
+    </div>
+    <label class="settings-label">YouTube (manual fallback)</label>
     <input class="settings-input" id="settingYT" type="number" placeholder="0">
 
     <div class="settings-section">AI Coach (Overseer)</div>
@@ -1477,6 +1493,78 @@ async function syncFromGist(silent=false){
     else setTimeout(()=>location.reload(),400);
   }catch(e){setSyncStatus('','');if(!silent)alert('Load failed. Check your token and Gist ID.');}
 }
+// ── LIVE FOLLOWER FETCHING ─────────────────────────────────────────────────
+const FOLLOWER_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+async function fetchLiveFollowers(){
+  const btn = document.getElementById('refreshFollowersBtn');
+  const status = document.getElementById('followerRefreshStatus');
+  if(btn){ btn.textContent = '↻ Refreshing...'; btn.disabled = true; }
+  if(status) status.textContent = 'Fetching live counts...';
+
+  const ytHandle = ls.get('setting-yt-handle','') || ls.get('setting-handle','').replace('@','');
+  const ttHandle = ls.get('setting-tt-handle','') || ls.get('setting-handle','').replace('@','');
+  const igHandle = ls.get('setting-ig-handle','') || ls.get('setting-handle','').replace('@','');
+  const ytApiKey = ls.get('setting-yt-apikey','');
+
+  const results = await Promise.allSettled([
+    ytApiKey && ytHandle ? fetchYouTube(ytHandle, ytApiKey) : Promise.reject('no key'),
+    ttHandle ? fetchTikTok(ttHandle) : Promise.reject('no handle'),
+    igHandle ? fetchInstagram(igHandle) : Promise.reject('no handle'),
+  ]);
+
+  const [ytRes, ttRes, igRes] = results;
+  let updated = [];
+
+  if(ytRes.status==='fulfilled'){
+    const n=ytRes.value; ls.set('setting-yt',n); ls.set('follower-cache-yt',{n,t:Date.now()}); updated.push('YouTube');
+  }
+  if(ttRes.status==='fulfilled'){
+    const n=ttRes.value; ls.set('setting-tt',n); ls.set('follower-cache-tt',{n,t:Date.now()}); updated.push('TikTok');
+  }
+  if(igRes.status==='fulfilled'){
+    const n=igRes.value; ls.set('setting-ig',n); ls.set('follower-cache-ig',{n,t:Date.now()}); updated.push('Instagram');
+  }
+
+  initPlatforms();
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  if(status) status.textContent = updated.length ? `Updated ${updated.join(', ')} at ${time}` : `Could not fetch counts — check handles & API key in Settings`;
+  if(btn){ btn.textContent = '↻ Refresh'; btn.disabled = false; }
+}
+
+async function fetchYouTube(handle, apiKey){
+  const h = handle.replace(/^@/,'');
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&forHandle=%40${encodeURIComponent(h)}&key=${apiKey}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(`YouTube API ${res.status}`);
+  const data = await res.json();
+  if(!data.items?.length) throw new Error('Channel not found');
+  if(data.items[0].statistics.hiddenSubscriberCount) throw new Error('Hidden');
+  return parseInt(data.items[0].statistics.subscriberCount, 10);
+}
+
+async function fetchTikTok(handle){
+  const h = handle.replace(/^@/,'');
+  const proxy = `https://corsproxy.io/?${encodeURIComponent(`https://www.tiktok.com/@${h}`)}`;
+  const res = await fetch(proxy, {headers:{'User-Agent':'Mozilla/5.0'}});
+  if(!res.ok) throw new Error(`TikTok ${res.status}`);
+  const html = await res.text();
+  const match = html.match(/"followerCount":(\d+)/);
+  if(!match) throw new Error('Parse failed');
+  return parseInt(match[1], 10);
+}
+
+async function fetchInstagram(handle){
+  const h = handle.replace(/^@/,'');
+  const proxy = `https://corsproxy.io/?${encodeURIComponent(`https://www.instagram.com/${h}/?__a=1&__d=dis`)}`;
+  const res = await fetch(proxy);
+  if(!res.ok) throw new Error(`IG ${res.status}`);
+  const data = await res.json();
+  const count = data?.graphql?.user?.edge_followed_by?.count ?? data?.data?.user?.edge_followed_by?.count;
+  if(count === undefined) throw new Error('Parse failed');
+  return count;
+}
+
 async function autoSyncOnStart(){
   const token=ls.get('setting-gh-token','');const gistId=ls.get('setting-gist-id','');
   if(token&&gistId) await syncFromGist(true);
@@ -1505,6 +1593,10 @@ function openSettings(){
   document.getElementById('settingName').value=ls.get('setting-name','');
   document.getElementById('settingHandle').value=ls.get('setting-handle','');
   document.getElementById('settingTagline').value=ls.get('setting-tagline','');
+  document.getElementById('settingTTHandle').value=ls.get('setting-tt-handle','');
+  document.getElementById('settingIGHandle').value=ls.get('setting-ig-handle','');
+  document.getElementById('settingYTHandle').value=ls.get('setting-yt-handle','');
+  document.getElementById('settingYtApiKey').value=ls.get('setting-yt-apikey','');
   document.getElementById('settingTT').value=ls.get('setting-tt','')||'';
   document.getElementById('settingIG').value=ls.get('setting-ig','')||'';
   document.getElementById('settingYT').value=ls.get('setting-yt','')||'';
@@ -1523,6 +1615,10 @@ function saveSettings(){
   ls.set('setting-name',document.getElementById('settingName').value.trim());
   ls.set('setting-handle',document.getElementById('settingHandle').value.trim());
   ls.set('setting-tagline',document.getElementById('settingTagline').value.trim());
+  ls.set('setting-tt-handle',document.getElementById('settingTTHandle').value.trim());
+  ls.set('setting-ig-handle',document.getElementById('settingIGHandle').value.trim());
+  ls.set('setting-yt-handle',document.getElementById('settingYTHandle').value.trim());
+  ls.set('setting-yt-apikey',document.getElementById('settingYtApiKey').value.trim());
   ls.set('setting-tt-prev',prevTT);ls.set('setting-ig-prev',prevIG);ls.set('setting-yt-prev',prevYT);
   ls.set('setting-tt',newTT);ls.set('setting-ig',newIG);ls.set('setting-yt',newYT);
   ls.set('setting-apikey',document.getElementById('settingApiKey').value.trim());
