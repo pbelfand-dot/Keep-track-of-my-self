@@ -931,11 +931,15 @@ header {
     <input class="settings-input mono" id="settingApiKey" type="password" placeholder="sk-ant-...">
 
     <div class="settings-section">Cross-Device Sync (GitHub Gist)</div>
-    <div class="settings-sub" style="margin-top:-8px;margin-bottom:12px;">Create a private GitHub Gist, paste its ID and a GitHub token with gist scope. Your data syncs to that Gist so you can load it on any device.</div>
+    <div class="settings-sub" style="margin-top:-8px;margin-bottom:12px;">Paste a GitHub token with <strong style="color:var(--text-secondary)">gist</strong> scope — the app will create and manage the Gist for you. Data syncs automatically every time you log something.</div>
     <label class="settings-label">GitHub Token (gist scope)</label>
     <input class="settings-input mono" id="settingGhToken" type="password" placeholder="ghp_...">
-    <label class="settings-label">Gist ID</label>
-    <input class="settings-input mono" id="settingGistId" placeholder="e.g. 6cad326836d38bd3a7ae">
+    <label class="settings-label">Gist ID <span style="color:var(--text-quaternary);font-weight:400;">(auto-filled after creation)</span></label>
+    <input class="settings-input mono" id="settingGistId" placeholder="auto-filled">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="btn btn-accent" id="createGistBtn" onclick="createGistForMe()" style="flex:1;" type="button">Create Gist for me</button>
+      <button class="btn" onclick="syncFromGist()" style="flex:1;" type="button">Load from cloud</button>
+    </div>
 
     <div class="settings-section">Posting Goal</div>
     <label class="settings-label">Videos per day</label>
@@ -952,9 +956,17 @@ header {
 
 <script>
 // ── STORAGE ────────────────────────────────────────────────────────────────
+let _syncTimer = null;
 const ls = {
   get:(k,d)=>{try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}},
-  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+  set:(k,v)=>{
+    try{localStorage.setItem(k,JSON.stringify(v));}catch{}
+    // auto-sync 4s after last write (debounced)
+    if(!k.startsWith('setting-')&&!k.startsWith('last-sync')&&!k.startsWith('pwa-')){
+      clearTimeout(_syncTimer);
+      _syncTimer = setTimeout(syncToGist, 4000);
+    }
+  }
 };
 const TODAY = new Date().toISOString().slice(0,10);
 
@@ -973,10 +985,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   checkApiKey();
   loadSettings();
   setInterval(checkReminders, 60000);
-  // Set today's date on activity form
   document.getElementById('activityDate').value = TODAY;
   document.getElementById('achDate').value = TODAY;
   document.getElementById('compDate').value = TODAY;
+  // auto-pull from Gist on startup if credentials exist
+  autoSyncOnStart();
 });
 
 // ── HEADER ─────────────────────────────────────────────────────────────────
@@ -1447,26 +1460,52 @@ async function syncToGist(){
   setSyncStatus('syncing','syncing...');
   const data={};
   for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);data[k]=localStorage.getItem(k);}
+  data['__synced_at']=JSON.stringify(new Date().toISOString());
   try{
     await fetch(`https://api.github.com/gists/${gistId}`,{method:'PATCH',headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},body:JSON.stringify({files:{'dashboard-data.json':{content:JSON.stringify(data,null,2)}}})});
     setSyncStatus('synced',`synced ${new Date().toLocaleTimeString()}`);
-    ls.set('last-sync',new Date().toISOString());
+    localStorage.setItem('last-sync',new Date().toISOString());
   }catch(e){setSyncStatus('','sync failed');}
 }
-async function syncFromGist(){
+async function syncFromGist(silent=false){
   const token=ls.get('setting-gh-token','');const gistId=ls.get('setting-gist-id','');
-  if(!token||!gistId){alert('Set GitHub token and Gist ID in Settings first.');return;}
-  setSyncStatus('syncing','loading...');
+  if(!token||!gistId){if(!silent)alert('Set GitHub token and Gist ID in Settings first.');return;}
+  setSyncStatus('syncing',silent?'checking cloud...':'loading...');
   try{
     const res=await fetch(`https://api.github.com/gists/${gistId}`,{headers:{Authorization:`token ${token}`}});
+    if(!res.ok){setSyncStatus('','sync failed');return;}
     const data=await res.json();
     const content=data.files?.['dashboard-data.json']?.content;
-    if(!content){setSyncStatus('','no data found');return;}
+    if(!content){setSyncStatus('','');return;}
     const parsed=JSON.parse(content);
+    const cloudTime=parsed['__synced_at']?JSON.parse(parsed['__synced_at']):null;
+    const localTime=localStorage.getItem('last-sync');
+    if(silent&&localTime&&cloudTime&&new Date(localTime)>=new Date(cloudTime)){
+      setSyncStatus('synced',`synced ${new Date(localTime).toLocaleTimeString()}`);return;
+    }
     Object.entries(parsed).forEach(([k,v])=>localStorage.setItem(k,v));
     setSyncStatus('synced','loaded from cloud');
-    setTimeout(()=>location.reload(),1000);
-  }catch(e){setSyncStatus('','load failed');}
+    if(!silent)setTimeout(()=>location.reload(),800);
+    else setTimeout(()=>location.reload(),400);
+  }catch(e){setSyncStatus('','');if(!silent)alert('Load failed. Check your token and Gist ID.');}
+}
+async function autoSyncOnStart(){
+  const token=ls.get('setting-gh-token','');const gistId=ls.get('setting-gist-id','');
+  if(token&&gistId) await syncFromGist(true);
+}
+async function createGistForMe(){
+  const token=document.getElementById('settingGhToken').value.trim();
+  if(!token){alert('Paste your GitHub token first.');return;}
+  const btn=document.getElementById('createGistBtn');
+  btn.textContent='Creating...';btn.disabled=true;
+  try{
+    const res=await fetch('https://api.github.com/gists',{method:'POST',headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},body:JSON.stringify({description:'My Dashboard Sync',public:false,files:{'dashboard-data.json':{content:'{}'}}})});
+    if(!res.ok)throw new Error();
+    const data=await res.json();
+    document.getElementById('settingGistId').value=data.id;
+    btn.textContent='✓ Gist created!';
+    setTimeout(()=>{btn.textContent='Create Gist for me';btn.disabled=false;},3000);
+  }catch(e){btn.textContent='Failed — check token';btn.disabled=false;}
 }
 function setSyncStatus(state,text){
   const dot=document.getElementById('syncDot');const txt=document.getElementById('syncText');
