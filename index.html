@@ -59,7 +59,6 @@ body::before {
 /* ── ANIMATIONS ────────────────────────────────────────── */
 @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
 @keyframes fadeIn   { from{opacity:0}to{opacity:1} }
-@keyframes shimmer  { 0%{background-position:200% center}100%{background-position:-200% center} }
 @keyframes glow-pulse { 0%,100%{box-shadow:0 0 0 0 var(--accent-glow)}50%{box-shadow:0 0 20px 4px var(--accent-glow)} }
 @keyframes countUp  { from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)} }
 @keyframes dot-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
@@ -81,10 +80,7 @@ header {
 .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .header-title {
   font-size: 15px; font-weight: 800; white-space: nowrap; letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #EFEFEF 0%, #E06040 80%);
-  background-size: 200% auto;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text; animation: shimmer 6s linear infinite;
+  color: var(--text-primary);
 }
 .header-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
 .date-pill {
@@ -142,6 +138,7 @@ header {
   transition: color 0.18s; border: none; background: none;
   color: var(--text-quaternary); font-family: var(--font);
   flex: 1; min-height: 52px; touch-action: manipulation;
+  position: relative;
 }
 .nav-tab:hover { color: var(--text-tertiary); }
 .nav-tab.active { color: var(--text-primary); }
@@ -182,31 +179,24 @@ header {
 .section-sub { font-size: 12px; color: var(--text-tertiary); margin-bottom: 14px; line-height: 1.55; }
 
 /* ── PLATFORM ──────────────────────────────────────────── */
-.platform-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-.platform-card {
-  background: var(--bg-secondary); border: 1px solid var(--border);
-  border-radius: var(--radius-md); padding: 14px;
-  transition: border-color 0.22s, background 0.22s, transform 0.18s, box-shadow 0.22s;
-  cursor: default; position: relative; overflow: hidden;
+.platform-list { display: flex; flex-direction: column; }
+.platform-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-bottom: 1px solid var(--border-soft); gap: 12px;
 }
-.platform-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--accent), transparent);
-  opacity: 0; transition: opacity 0.22s;
-}
-.platform-card:hover { border-color: var(--glass-border-strong); background: var(--glass-bg-hover); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.35); }
-.platform-card:hover::before { opacity: 1; }
-.platform-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.platform-name { font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 0.01em; }
+.platform-row:last-child { border-bottom: none; }
+.platform-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.platform-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.platform-handle { font-size: 11px; color: var(--text-tertiary); }
+.sparkline { width: 72px; height: 20px; flex-shrink: 0; }
+.platform-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
 .platform-count {
-  font-size: 28px; font-weight: 800; letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #EFEFEF 30%, #AAAAAA 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text; animation: countUp 0.4s var(--ease-out) both;
+  font-size: 17px; font-weight: 800; letter-spacing: -0.02em;
+  color: var(--text-primary); font-variant-numeric: tabular-nums;
+  animation: countUp 0.4s var(--ease-out) both;
 }
-.platform-handle { font-size: 11px; color: var(--text-tertiary); margin-bottom: 5px; }
-.platform-delta { font-size: 11px; color: var(--success); font-weight: 600; }
-.sparkline { width: 100%; height: 22px; margin-bottom: 4px; }
+.platform-delta { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+.platform-delta.up { color: var(--success); }
 
 /* ── QUICK LOG ─────────────────────────────────────────── */
 .quick-log-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -255,7 +245,6 @@ header {
 .typing-dots { display: flex; gap: 4px; }
 .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); animation: dot-bounce 1.2s infinite; }
 .typing-dots span:nth-child(2){animation-delay:0.2s}.typing-dots span:nth-child(3){animation-delay:0.4s}
-@keyframes dot-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
 .chat-composer { display: flex; gap: 8px; align-items: flex-end; margin-top: 10px; }
 .chat-input {
   flex: 1; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md);
@@ -397,8 +386,7 @@ header {
 .stepper-btn:active { opacity: 0.7; transform: scale(0.93); }
 .stepper-value {
   font-size: 32px; font-weight: 800; letter-spacing: -0.03em; min-width: 64px; text-align: center;
-  background: linear-gradient(135deg, #EFEFEF 0%, #AAAAAA 120%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  color: var(--text-primary);
 }
 .stepper-unit { font-size: 12px; color: var(--text-tertiary); font-weight: 600; }
 .rep-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -433,8 +421,7 @@ header {
 .stat-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; text-align: center; }
 .stat-val {
   font-size: 22px; font-weight: 800; letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #EFEFEF 0%, #999 120%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  color: var(--text-primary);
 }
 .stat-lbl { font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
 .history-list { display: flex; flex-direction: column; }
@@ -451,8 +438,7 @@ header {
 .metric-icon { font-size: 20px; margin-bottom: 5px; }
 .metric-val {
   font-size: 24px; font-weight: 800; letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #EFEFEF 0%, #AAAAAA 120%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  color: var(--text-primary);
 }
 .metric-unit { font-size: 11px; color: var(--text-tertiary); display: inline; }
 .metric-lbl { font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
@@ -507,7 +493,6 @@ header {
 
 /* RESPONSIVE */
 @media (max-width: 600px) {
-  .platform-grid { grid-template-columns: repeat(2,1fr); }
   .set-logger { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2,1fr); }
   .metric-grid { grid-template-columns: repeat(2,1fr); }
@@ -517,6 +502,11 @@ header {
   .header-actions .btn:not(.btn-accent) { display: none; }
   .header-actions .btn-settings { display: flex; }
 }
+
+/* ── FOCUS VISIBLE ─────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:focus-visible, .quick-btn:focus-visible, .nav-tab:focus-visible, .stepper-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focus:not(:focus-visible), select:focus:not(:focus-visible) { outline: none; }
 
 /* PWA INSTALL BANNER */
 #installBanner {
@@ -587,27 +577,39 @@ header {
         <div class="profile-tagline" id="profileTagline">Building the long game.</div>
       </div>
     </div>
-    <div class="platform-grid">
-      <div class="platform-card">
-        <div class="platform-top"><div class="platform-name">TikTok</div></div>
-        <div class="platform-count" id="ttCount">0</div>
-        <div class="platform-handle" id="ttHandle">@handle</div>
+    <div class="platform-list">
+      <div class="platform-row">
+        <div class="platform-info">
+          <span class="platform-name">TikTok</span>
+          <span class="platform-handle" id="ttHandle">@handle</span>
+        </div>
         <svg class="sparkline" id="ttSparkline"></svg>
-        <div class="platform-delta" id="ttDelta">+0 this week</div>
+        <div class="platform-right">
+          <span class="platform-count" id="ttCount">0</span>
+          <span class="platform-delta" id="ttDelta">+0 this week</span>
+        </div>
       </div>
-      <div class="platform-card">
-        <div class="platform-top"><div class="platform-name">Instagram</div></div>
-        <div class="platform-count" id="igCount">0</div>
-        <div class="platform-handle" id="igHandle">@handle</div>
+      <div class="platform-row">
+        <div class="platform-info">
+          <span class="platform-name">Instagram</span>
+          <span class="platform-handle" id="igHandle">@handle</span>
+        </div>
         <svg class="sparkline" id="igSparkline"></svg>
-        <div class="platform-delta" id="igDelta">+0 this week</div>
+        <div class="platform-right">
+          <span class="platform-count" id="igCount">0</span>
+          <span class="platform-delta" id="igDelta">+0 this week</span>
+        </div>
       </div>
-      <div class="platform-card">
-        <div class="platform-top"><div class="platform-name">YouTube</div></div>
-        <div class="platform-count" id="ytCount">0</div>
-        <div class="platform-handle" id="ytHandle">@handle</div>
+      <div class="platform-row">
+        <div class="platform-info">
+          <span class="platform-name">YouTube</span>
+          <span class="platform-handle" id="ytHandle">@handle</span>
+        </div>
         <svg class="sparkline" id="ytSparkline"></svg>
-        <div class="platform-delta" id="ytDelta">+0 this week</div>
+        <div class="platform-right">
+          <span class="platform-count" id="ytCount">0</span>
+          <span class="platform-delta" id="ytDelta">+0 this week</span>
+        </div>
       </div>
     </div>
     <div id="followerRefreshStatus" style="font-size:11px;color:var(--text-quaternary);margin-top:8px;"></div>
@@ -1122,12 +1124,16 @@ function quickLog(type,label){
 // ── PLATFORMS ──────────────────────────────────────────────────────────────
 function initPlatforms(){
   const tt=ls.get('setting-tt',0),ig=ls.get('setting-ig',0),yt=ls.get('setting-yt',0);
-  const handle=ls.get('setting-handle','@handle');
-  ['tt','ig','yt'].forEach(p=>{
-    const counts={tt,ig,yt};
-    document.getElementById(`${p}Count`).textContent=formatNum(counts[p]);
-    document.getElementById(`${p}Handle`).textContent=handle;
-  });
+  const globalHandle=ls.get('setting-handle','@handle');
+  const ttHandle=ls.get('setting-tt-handle','')||globalHandle;
+  const igHandle=ls.get('setting-ig-handle','')||globalHandle;
+  const ytHandle=ls.get('setting-yt-handle','')||globalHandle;
+  document.getElementById('ttCount').textContent=formatNum(tt);
+  document.getElementById('igCount').textContent=formatNum(ig);
+  document.getElementById('ytCount').textContent=formatNum(yt);
+  document.getElementById('ttHandle').textContent=ttHandle||'@handle';
+  document.getElementById('igHandle').textContent=igHandle||'@handle';
+  document.getElementById('ytHandle').textContent=ytHandle||'@handle';
   const name=ls.get('setting-name','');
   const tagline=ls.get('setting-tagline','Building the long game.');
   if(name){
@@ -1135,12 +1141,14 @@ function initPlatforms(){
     const av=document.getElementById('profileAvatar');
     if(av) av.textContent=name.charAt(0).toUpperCase();
   }
-  document.getElementById('profileHandle').textContent=handle;
+  document.getElementById('profileHandle').textContent=globalHandle;
   if(tagline){document.getElementById('profileTagline').textContent=tagline;}
   const prev={tt:ls.get('setting-tt-prev',tt),ig:ls.get('setting-ig-prev',ig),yt:ls.get('setting-yt-prev',yt)};
-  document.getElementById('ttDelta').textContent=formatDelta(tt-prev.tt);
-  document.getElementById('igDelta').textContent=formatDelta(ig-prev.ig);
-  document.getElementById('ytDelta').textContent=formatDelta(yt-prev.yt);
+  [['tt',tt-prev.tt],['ig',ig-prev.ig],['yt',yt-prev.yt]].forEach(([p,d])=>{
+    const el=document.getElementById(`${p}Delta`);
+    el.textContent=formatDelta(d);
+    el.classList.toggle('up',d>0);
+  });
   drawSparkline('ttSparkline',ls.get('setting-tt-history',[0,tt]));
   drawSparkline('igSparkline',ls.get('setting-ig-history',[0,ig]));
   drawSparkline('ytSparkline',ls.get('setting-yt-history',[0,yt]));
