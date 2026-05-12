@@ -16,30 +16,24 @@
 <style>
 /* ── DESIGN SYSTEM ─────────────────────────────────────── */
 :root {
-  --bg: #08080A; --bg-deep: #030304;
-  --bg-secondary: rgba(255,255,255,0.04);
-  --bg-card: rgba(255,255,255,0.055);
-  --glass-bg: rgba(255,255,255,0.055);
-  --glass-bg-hover: rgba(255,255,255,0.09);
-  --glass-bg-strong: rgba(255,255,255,0.11);
-  --glass-border: rgba(255,255,255,0.10);
-  --glass-border-strong: rgba(255,255,255,0.22);
-  --glass-shadow:
-    0 1px 0 0 rgba(255,255,255,0.08) inset,
-    0 16px 48px rgba(0,0,0,0.55),
-    0 2px 4px rgba(0,0,0,0.30);
-  --glass-shadow-lg:
-    0 1px 0 0 rgba(255,255,255,0.10) inset,
-    0 32px 96px rgba(0,0,0,0.70),
-    0 6px 16px rgba(0,0,0,0.40);
-  --text-primary: #F5F5F7; --text-secondary: #ABABAB;
-  --text-tertiary: #6B6B70; --text-quaternary: #44444A;
-  --border: rgba(255,255,255,0.10); --border-soft: rgba(255,255,255,0.06);
-  --border-strong: rgba(255,255,255,0.22);
-  --accent: #FF7A5C; --accent-hi: #FF3A6E; --accent-glow: rgba(255,122,92,0.35);
-  --accent-subtle: rgba(255,122,92,0.12);
-  --success: #5ECDA8; --warning: #FFBE59; --danger: #FF5757;
-  --radius-sm: 10px; --radius-md: 14px; --radius-lg: 18px; --radius-xl: 24px;
+  --bg: #0E0E10; --bg-deep: #0A0A0C;
+  --bg-secondary: rgba(255,255,255,0.03);
+  --bg-card: rgba(255,255,255,0.04);
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-bg-hover: rgba(255,255,255,0.07);
+  --glass-bg-strong: rgba(255,255,255,0.08);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-border-strong: rgba(255,255,255,0.16);
+  --glass-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  --glass-shadow-lg: 0 2px 8px rgba(0,0,0,0.5), 0 24px 64px rgba(0,0,0,0.4);
+  --text-primary: #EFEFEF; --text-secondary: #999999;
+  --text-tertiary: #5A5A60; --text-quaternary: #38383E;
+  --border: rgba(255,255,255,0.08); --border-soft: rgba(255,255,255,0.05);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #E06040; --accent-hi: #E03060; --accent-glow: rgba(224,96,64,0.25);
+  --accent-subtle: rgba(224,96,64,0.10);
+  --success: #4EAD8A; --warning: #E8A840; --danger: #E05050;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
   --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -57,11 +51,7 @@ html, body {
 
 body::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background:
-    radial-gradient(70% 50% at 70% 5%,  rgba(255,122,92,0.11) 0%, transparent 65%),
-    radial-gradient(55% 40% at 10% 90%, rgba(94,205,168,0.07) 0%, transparent 65%),
-    radial-gradient(40% 30% at 90% 80%, rgba(255,62,110,0.05) 0%, transparent 60%),
-    linear-gradient(180deg, #030304 0%, #08080A 100%);
+  background: radial-gradient(80% 50% at 50% 0%, rgba(224,96,64,0.05) 0%, transparent 70%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -131,18 +121,17 @@ header {
   gap: 4px;
 }
 .nav-tab {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  cursor: pointer; padding: 8px 16px; border-radius: var(--radius-md);
-  transition: color 0.2s var(--ease-out), background 0.2s var(--ease-out);
-  border: none; background: none; color: var(--text-quaternary);
-  font-family: var(--font); flex: 1; min-height: 52px;
-  touch-action: manipulation; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; padding: 8px 12px; border-radius: var(--radius-sm);
+  transition: color 0.18s; border: none; background: none;
+  color: var(--text-quaternary); font-family: var(--font);
+  flex: 1; min-height: 52px; touch-action: manipulation;
 }
-.nav-tab:hover { color: var(--text-secondary); }
-.nav-tab.active { color: var(--accent); background: var(--accent-subtle); }
-.nav-tab svg { width: 20px; height: 20px; stroke-width: 1.8; }
-.nav-tab.active svg { stroke-width: 2.2; }
-.nav-tab span { font-size: 10px; font-weight: 700; letter-spacing: 0.03em; }
+.nav-tab:hover { color: var(--text-tertiary); }
+.nav-tab.active { color: var(--text-primary); }
+.nav-tab svg { width: 20px; height: 20px; stroke-width: 1.75; }
+.nav-tab.active svg { stroke-width: 2; }
+.nav-tab span { font-size: 10px; font-weight: 600; letter-spacing: 0.01em; }
 
 /* ── TABS ──────────────────────────────────────────────── */
 .tab-content { display: none; padding: 16px; max-width: 880px; margin: 0 auto; width: 100%; }
@@ -175,10 +164,7 @@ header {
 }
 .platform-card:hover { border-color: var(--glass-border-strong); background: var(--glass-bg-hover); transform: translateY(-1px); }
 .platform-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.platform-name { font-size: 10px; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.06em; }
-.live-badge { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 700; color: var(--success); }
-.live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+.platform-name { font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 0.01em; }
 .platform-count { font-size: 24px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; }
 .platform-handle { font-size: 11px; color: var(--text-tertiary); margin-bottom: 5px; }
 .platform-delta { font-size: 11px; color: var(--success); font-weight: 600; }
@@ -220,8 +206,6 @@ header {
 /* OVERSEER */
 .overseer-header { display: flex; align-items: center; justify-content: space-between; }
 .overseer-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
-.online-badge { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--success); font-weight: 600; }
-.online-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
 .overseer-subtitle { font-size: 11px; color: var(--text-quaternary); margin-top: 2px; }
 .chat-messages { max-height: 300px; overflow-y: auto; padding: 12px 0; display: none; flex-direction: column; gap: 10px; }
 .chat-messages.visible { display: flex; }
@@ -432,7 +416,7 @@ header {
 
 /* PROFILE */
 .profile-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
-.profile-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--glass-bg-strong); border: 1.5px solid var(--glass-border-strong); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.profile-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--glass-bg-strong); border: 1px solid var(--glass-border-strong); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; letter-spacing: -0.01em; }
 .profile-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
 .profile-handle { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
 .profile-tagline { font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; font-style: italic; }
@@ -524,7 +508,7 @@ header {
       <button class="btn btn-sm" onclick="openSettings()">Edit</button>
     </div>
     <div class="profile-row">
-      <div class="profile-avatar">✦</div>
+      <div class="profile-avatar" id="profileAvatar">—</div>
       <div>
         <div class="profile-name" id="profileName">Your Name</div>
         <div class="profile-handle" id="profileHandle">@handle</div>
@@ -533,21 +517,21 @@ header {
     </div>
     <div class="platform-grid">
       <div class="platform-card">
-        <div class="platform-top"><div class="platform-name">TIKTOK</div><div class="live-badge"><span class="live-dot"></span>LIVE</div></div>
+        <div class="platform-top"><div class="platform-name">TikTok</div></div>
         <div class="platform-count" id="ttCount">0</div>
         <div class="platform-handle" id="ttHandle">@handle</div>
         <svg class="sparkline" id="ttSparkline"></svg>
         <div class="platform-delta" id="ttDelta">+0 this week</div>
       </div>
       <div class="platform-card">
-        <div class="platform-top"><div class="platform-name">INSTAGRAM</div><div class="live-badge"><span class="live-dot"></span>LIVE</div></div>
+        <div class="platform-top"><div class="platform-name">Instagram</div></div>
         <div class="platform-count" id="igCount">0</div>
         <div class="platform-handle" id="igHandle">@handle</div>
         <svg class="sparkline" id="igSparkline"></svg>
         <div class="platform-delta" id="igDelta">+0 this week</div>
       </div>
       <div class="platform-card">
-        <div class="platform-top"><div class="platform-name">YOUTUBE</div><div class="live-badge"><span class="live-dot"></span>LIVE</div></div>
+        <div class="platform-top"><div class="platform-name">YouTube</div></div>
         <div class="platform-count" id="ytCount">0</div>
         <div class="platform-handle" id="ytHandle">@handle</div>
         <svg class="sparkline" id="ytSparkline"></svg>
@@ -585,8 +569,8 @@ header {
   <div class="card">
     <div class="overseer-header">
       <div>
-        <div class="overseer-title">✦ Overseer <div class="online-badge"><span class="online-dot"></span>online</div></div>
-        <div class="overseer-subtitle">Your personal AI coach — ask anything</div>
+        <div class="overseer-title">Overseer</div>
+        <div class="overseer-subtitle">Ask anything about your training, goals, or day</div>
       </div>
       <button class="btn btn-sm" onclick="newConversation()">(new)</button>
     </div>
@@ -1061,7 +1045,11 @@ function initPlatforms(){
   });
   const name=ls.get('setting-name','');
   const tagline=ls.get('setting-tagline','Building the long game.');
-  if(name){document.getElementById('profileName').textContent=name;}
+  if(name){
+    document.getElementById('profileName').textContent=name;
+    const av=document.getElementById('profileAvatar');
+    if(av) av.textContent=name.charAt(0).toUpperCase();
+  }
   document.getElementById('profileHandle').textContent=handle;
   if(tagline){document.getElementById('profileTagline').textContent=tagline;}
   const prev={tt:ls.get('setting-tt-prev',tt),ig:ls.get('setting-ig-prev',ig),yt:ls.get('setting-yt-prev',yt)};
@@ -1078,7 +1066,7 @@ function drawSparkline(id,data){
   const svg=document.getElementById(id);if(!svg||data.length<2)return;
   const w=svg.clientWidth||100,h=22,min=Math.min(...data),max=Math.max(...data),range=max-min||1;
   const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-min)/range)*(h-4)-2}`).join(' ');
-  svg.innerHTML=`<polyline points="${pts}" fill="none" stroke="rgba(224,118,88,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  svg.innerHTML=`<polyline points="${pts}" fill="none" stroke="rgba(224,96,64,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
 }
 
 // ── REFLECTION ─────────────────────────────────────────────────────────────
